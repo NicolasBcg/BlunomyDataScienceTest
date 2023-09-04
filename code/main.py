@@ -1,30 +1,40 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-
 from sklearn.cluster import AgglomerativeClustering
-from sklearn.neighbors import kneighbors_graph
 
-def plot(df):#a function to visualise data frame
+colors=['#808080', '#FF0000', '#FFFF00', '#00FF00', '#0000FF', '#FF00FF', '#C0C0C0', '#FFA500', '#191970', '#17becf', '#FF69B4', '#8B008B', '#6B8E23', '#00BFFF'] #a bunch of color to display different labels
+
+def plot(array,number_of_labels=0):#a function to visualise 3D area. no number_of_label if there are no labels
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
-    for value,point in df.iterrows():
-        xs = point['x']
-        ys = point['y']
-        zs = point['z']
-        ax.scatter(xs, ys, zs)
+    if number_of_labels==0:
+        for point in array:
+            ax.scatter(point[0], point[1], point[2])
+    else: 
+        if number_of_labels > len(colors):
+            for _ in range(len(colors),number_of_labels+1):
+                colors.append('#000000')
+        for point in array:
+            ax.scatter(point[0], point[1], point[2],c=colors[int(point[3])])
     ax.set_xlabel('X Label')
     ax.set_ylabel('Y Label')
     ax.set_zlabel('Z Label')
     plt.show()
 
+def cluster(data_numpy_array):
+    clustering = AgglomerativeClustering(n_clusters=None,linkage='single',distance_threshold=0.75).fit(data_numpy_array)#link points/agglomerations when the minimum distance between the points/aglomerations is inferior to distance_threshold with all the points in data_numpy_array
+    labels=[[label] for label in clustering.labels_]#putting label on the right format to concatenate
+    data_with_label = np.hstack((data_numpy_array, labels))#add label to the points on a forth row
+    return data_with_label,clustering.n_clusters_
+
 def main():  
     df = pd.read_parquet('../data/lidar_cable_points_easy.parquet') #extracting data into df
-    #plot(df)
-    #print(df)
     data_numpy_array = df.to_numpy()#create a numpy array from data frame
-    clustering = AgglomerativeClustering(n_clusters=None,linkage='single',distance_threshold=0.75).fit(data_numpy_array)#link points/agglomerations when the minimum distance between the points/aglomerations is inferior to distance_threshold with all the points in data_numpy_array
-    #print("there are "+str(clustering.n_clusters_)+" wires detected by clustering") 
+    #plot(data_numpy_array)#plot array
+    data_labeled,number_of_clusters = cluster(data_numpy_array)
+    print("there are "+str(number_of_clusters)+" wires detected by clustering") 
+    plot(data_labeled,number_of_clusters)
 
 if __name__ == '__main__' :
     main()
