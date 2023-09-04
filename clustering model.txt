@@ -1,0 +1,5 @@
+In easy and medium bach all wires are distinct, separate entities so Agglomerative clustering might be efficient since we can include connectivity constraints
+
+In hard bach ther are some loss in connectivity so the previous solutions might not work as well anymore.
+
+Then in extra hard loss in connectivity happen less often than in hard.
