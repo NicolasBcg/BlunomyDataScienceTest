@@ -6,7 +6,7 @@ from sklearn.decomposition import PCA
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 import sympy as sy
-
+from math import *
 colors=['#808080', '#FF0000', '#FFFF00', '#00FF00', '#0000FF', '#FF00FF', '#C0C0C0', '#FFA500', '#191970', '#17becf', '#FF69B4', '#8B008B', '#6B8E23', '#00BFFF'] #a bunch of color to display different labels
 
 def plot(array=[],number_of_labels=0,planes=[]):#a function to visualise 3D area. no number_of_label if there are no labels
@@ -62,6 +62,9 @@ def findPlane(array): #find the nearest plane to an array of points
     print("%f x + %f y + %f = z" % (a, b, d))
     return a ,b ,d
 
+def distance_point_plane(point,plane):
+    return abs(plane[0]*point[0]+plane[1]*point[1]-point[2]+plane[2])/sqrt(pow(plane[0],2)+pow(plane[1],2)+1)
+
 def main():  
     df = pd.read_parquet('../data/lidar_cable_points_easy.parquet') #extracting data into df
     data_numpy_array = df.to_numpy()#create a numpy array from data frame
@@ -70,6 +73,9 @@ def main():
     # plot(data_by_label,len(data_by_label))
     print("there are "+str(len(data_by_label))+" wires detected by clustering") 
     planes=[findPlane(array) for array in data_by_label]
+    # print(distance_point_plane(data_by_label[2][5],planes[0]))
+    # print(distance_point_plane(data_by_label[2][5],planes[1]))
+    # print(distance_point_plane(data_by_label[2][5],planes[2]))
     # planes=[findPlane(data_by_label[0])]
     # plot(data_by_label,len(data_by_label),planes)
     # planes=[findPlane(data_by_label[1])]
