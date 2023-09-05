@@ -2,6 +2,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.cluster import AgglomerativeClustering
+from sklearn.decomposition import PCA
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+import sympy as sy
 
 colors=['#808080', '#FF0000', '#FFFF00', '#00FF00', '#0000FF', '#FF00FF', '#C0C0C0', '#FFA500', '#191970', '#17becf', '#FF69B4', '#8B008B', '#6B8E23', '#00BFFF'] #a bunch of color to display different labels
 
@@ -44,34 +48,35 @@ def cluster(data_numpy_array):
     return data_by_label
 
 def findPlane(array): #find the nearest plane to an array of points
-    tmp_A = []
-    tmp_b = []
-    for point in array:
-        tmp_A.append([point[0], point[1], 1])
-        tmp_b.append(point[2])
-    b = np.matrix(tmp_b).T
-    A = np.matrix(tmp_A)
-    fit = (A.T * A).I * A.T * b
-    errors = b - A * fit
-    residual = np.linalg.norm(errors)
-    print("solution:")
-    print("%f x + %f y + %f = z" % (fit[0], fit[1], fit[2]))
-    print("errors:")
-    print(errors)
-    print("residual:")
-    print(residual)
-    return fit[0], fit[1], fit[2]
-
+    pca = PCA(n_components=2)
+    pca.fit(array)
+    points=pca.inverse_transform(np.array([[0,0],[1,0],[0,1]]))
+    v1=[points[1][i]-points[0][i] for i in range(3)]
+    v2=[points[2][i]-points[0][i] for i in range(3)]
+    p=[v1[1]*v2[2]-v1[2]*v2[1],v1[2]*v2[0]-v1[0]*v2[2],v1[0]*v2[1]-v1[1]*v2[0]]
+    #print( solution )
+    a = p[0]/p[2]
+    b = p[1]/p[2]
+    d = (p[0]*v1[0] + p[1]*v1[1] +  p[2]*v1[2])/p[2]
+    c = 1
+    print("%f x + %f y + %f = z" % (a, b, d))
+    return a ,b ,d
 
 def main():  
     df = pd.read_parquet('../data/lidar_cable_points_easy.parquet') #extracting data into df
     data_numpy_array = df.to_numpy()#create a numpy array from data frame
-    #plot(data_numpy_array)
+    # plot(data_numpy_array)
     data_by_label = cluster(data_numpy_array)
-    #plot(data_by_label,len(data_by_label))
+    # plot(data_by_label,len(data_by_label))
     print("there are "+str(len(data_by_label))+" wires detected by clustering") 
     planes=[findPlane(array) for array in data_by_label]
-    plot(data_by_label,len(data_by_label),planes)
+    # planes=[findPlane(data_by_label[0])]
+    # plot(data_by_label,len(data_by_label),planes)
+    # planes=[findPlane(data_by_label[1])]
+    # plot(data_by_label,len(data_by_label),planes)
+    # planes=[findPlane(data_by_label[2])]
+    # plot(data_by_label,len(data_by_label),planes)
+    #plot(data_by_label,3,planes)
 
 if __name__ == '__main__' :
     main()
