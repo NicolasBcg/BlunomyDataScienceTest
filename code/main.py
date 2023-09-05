@@ -67,7 +67,7 @@ def findPlane(array): #find the nearest plane to an array of points and the poin
     d = (-p[0]*points[0][0] - p[1]*points[0][1] -  p[2]*points[0][2])/p[2]
     #print("%f x + %f y + %f = z" % (a, b, d))
     wire_projection=pca.transform(array)
-    return a ,b ,d,wire_projection
+    return a ,b ,d,wire_projection,pca
 
 def distance_point_plane(point,plane):#gives the distance between a plane and a point
     return abs(plane[0]*point[0]+plane[1]*point[1]-point[2]+plane[2])/sqrt(pow(plane[0],2)+pow(plane[1],2)+1)
@@ -120,16 +120,26 @@ def main():
     t0=time.time()
     for plane in planes:
         x0,y0=find_x0_y0(plane[3])
-        print(x0)
-        print(y0)
-        bests_c_x0_y0.append([fmin(error_on_catenary, 1,args=(plane[3],x0,y0),full_output=1,disp=0)[0],x0,y0])
+        # print(x0)
+        # print(y0)
+        bests_c_x0_y0.append([fmin(error_on_catenary, 1,args=(plane[3],x0,y0),full_output=1,disp=0)[0][0],x0,y0])
     end=time.time()-t0
 
     print("RESULTS : ")
-    print("time to find catenary functions : "+str(end))
+    print("Time to find catenary functions in 2D: "+str(end))
+    print("For catenary equation, the equation becomes :")
+    print("  y1*x + y2*y + y3*z = y0 + c * [cosh((x1*x + x2*y + x3*z - x0)/c)-1]")
     for i in range(len(bests_c_x0_y0)):
-        print("The best catenary param c for wire is : "+str(bests_c_x0_y0[i][0]))
-        plot2D(planes[i][3],True,bests_c_x0_y0[i][1],bests_c_x0_y0[i][2],bests_c_x0_y0[i][0])
+        print("For wire "+str(i)+" :")
+        print("  c = "+str(bests_c_x0_y0[i][0]))
+        print("  x0 = "+str(bests_c_x0_y0[i][1]))
+        print("  y0 = "+str(bests_c_x0_y0[i][2]))
+        x=planes[i][4].inverse_transform(np.array([1,0]))
+        y=planes[i][4].inverse_transform(np.array([0,1]))
+        print("  x1 = "+str(x[0])+"; x2 = "+str(x[1])+";x3 = "+str(x[2]))
+        print("  y1 = "+str(y[0])+"; y2 = "+str(y[1])+";y3 = "+str(y[2]))
+
+        plot2D(planes[i][3],True,10,bests_c_x0_y0[i][2],bests_c_x0_y0[i][0])
 
 if __name__ == '__main__' :
     main()
