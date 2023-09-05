@@ -84,6 +84,28 @@ def error_on_catenary(x,array,x0,y0):#return the global error of the catenary fu
         error+= minimum_distance_point_catanary(point,x0,y0,x)[1]
     return error
 
+def find_x0_y0(array,spanReduction=1000):#function to find a suitable y0 !!! can be upgraded for more precision !!!
+    xmin,xmax=0,0
+    for point in array:#searching for xspan
+        if point[0]>xmax:
+            xmax=point[0]
+        elif point[0]<xmin:
+            xmin=point[0]
+    span=xmax-xmin
+    xspan_for_y=span/spanReduction
+    ysum=0
+    found=0
+    for point in array:
+        if point[0] > 0 - xspan_for_y  and point[0] < 0+xspan_for_y:
+            ysum+=point[1]
+            found+=1
+    if found<len(array)/50:
+        return find_x0_y0(array,spanReduction/2)
+    elif found>len(array)/25:
+        return find_x0_y0(array,spanReduction*1.5)
+    else:
+        return 0,ysum/found
+
 def main(): 
      
     df = pd.read_parquet('../data/lidar_cable_points_easy.parquet') #extracting data into df
@@ -94,19 +116,20 @@ def main():
     print("there are "+str(len(data_by_label))+" wires detected by clustering") 
 
     planes=[findPlane(array) for array in data_by_label]#finding planes
-    bests_c=[]
+    bests_c_x0_y0=[]
     t0=time.time()
     for plane in planes:
-        x0=0
-        y0=-0.52
-        bests_c.append(fmin(error_on_catenary, 1,args=(plane[3],x0,y0),full_output=1,disp=0))
+        x0,y0=find_x0_y0(plane[3])
+        print(x0)
+        print(y0)
+        bests_c_x0_y0.append([fmin(error_on_catenary, 1,args=(plane[3],x0,y0),full_output=1,disp=0)[0],x0,y0])
     end=time.time()-t0
 
     print("RESULTS : ")
     print("time to find catenary functions : "+str(end))
-    for i in range(len(bests_c)):
-        print("The best catenary param for wire is : "+str(bests_c[i][0]))
-    plot2D(planes[0][3],True,0,-0.52,bests_c[0][0])
+    for i in range(len(bests_c_x0_y0)):
+        print("The best catenary param c for wire is : "+str(bests_c_x0_y0[i][0]))
+        plot2D(planes[i][3],True,bests_c_x0_y0[i][1],bests_c_x0_y0[i][2],bests_c_x0_y0[i][0])
 
 if __name__ == '__main__' :
     main()
