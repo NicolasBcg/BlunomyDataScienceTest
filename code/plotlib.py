@@ -31,7 +31,7 @@ def plot(array=[],number_of_labels=0,planes=[]):#a function to visualise 3D area
     ax.set_zlabel('Z Label')
     plt.show()
 
-def plot2D(array,catenary=True,x0=0,y0=0,c=1):#a function to visualise 2D data array.
+def plot2D(array=[],catenary=False,x0=0,y0=0,c=1):#a function to visualise 2D data array.
     for point in array:
         plt.scatter(point[0], point[1],c=colors[0])
     if catenary:

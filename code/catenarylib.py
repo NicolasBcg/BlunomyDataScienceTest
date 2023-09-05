@@ -27,10 +27,10 @@ def find_x0_y0(array,spanReduction=1000):#function to find a suitable y0 !!! can
     else:
         return 0,ysum/found
     
-def catenary_dist_function(x,point,x0,y0,c):#gives the distance between a plane and a point from catenary
+def catenary_dist_function(x,point,x0,y0,c):#gives the distance between a point and a point from catenary
     return abs(sqrt(pow(point[0]-x,2)+ pow( point[1]-(y0+c*cosh((x-x0)/c)-c),2) ))
 
-def minimum_distance_point_catanary(point,x0,y0,c):#gives the minimum distance between a plane and a point from catenary
+def minimum_distance_point_catanary(point,x0,y0,c):#gives the minimum distance between a point and a point from catenary
     return fmin(catenary_dist_function, 0,args=(point,x0,y0,c),full_output=1,disp=0)
 
 def findCatenary(array):
