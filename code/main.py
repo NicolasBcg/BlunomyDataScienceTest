@@ -3,9 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.decomposition import PCA
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import StandardScaler
-import sympy as sy
+from sklearn.linear_model import RANSACRegressor
 from math import *
 colors=['#808080', '#FF0000', '#FFFF00', '#00FF00', '#0000FF', '#FF00FF', '#C0C0C0', '#FFA500', '#191970', '#17becf', '#FF69B4', '#8B008B', '#6B8E23', '#00BFFF'] #a bunch of color to display different labels
 
@@ -57,8 +55,7 @@ def findPlane(array): #find the nearest plane to an array of points
     #print( solution )
     a = p[0]/p[2]
     b = p[1]/p[2]
-    d = (p[0]*v1[0] + p[1]*v1[1] +  p[2]*v1[2])/p[2]
-    c = 1
+    d = (-p[0]*points[0][0] - p[1]*points[0][1] -  p[2]*points[0][2])/p[2]
     print("%f x + %f y + %f = z" % (a, b, d))
     return a ,b ,d
 
@@ -68,9 +65,9 @@ def distance_point_plane(point,plane):
 def main():  
     df = pd.read_parquet('../data/lidar_cable_points_easy.parquet') #extracting data into df
     data_numpy_array = df.to_numpy()#create a numpy array from data frame
-    # plot(data_numpy_array)
+    #plot(data_numpy_array)
     data_by_label = cluster(data_numpy_array)
-    # plot(data_by_label,len(data_by_label))
+    #plot(data_by_label,len(data_by_label))
     print("there are "+str(len(data_by_label))+" wires detected by clustering") 
     planes=[findPlane(array) for array in data_by_label]
     # print(distance_point_plane(data_by_label[2][5],planes[0]))
@@ -82,7 +79,7 @@ def main():
     # plot(data_by_label,len(data_by_label),planes)
     # planes=[findPlane(data_by_label[2])]
     # plot(data_by_label,len(data_by_label),planes)
-    #plot(data_by_label,3,planes)
+
 
 if __name__ == '__main__' :
     main()
