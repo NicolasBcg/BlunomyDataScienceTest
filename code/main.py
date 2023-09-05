@@ -3,24 +3,25 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.decomposition import PCA
-from sklearn.linear_model import RANSACRegressor
 from math import *
+from scipy.optimize import fmin
+import time
 colors=['#808080', '#FF0000', '#FFFF00', '#00FF00', '#0000FF', '#FF00FF', '#C0C0C0', '#FFA500', '#191970', '#17becf', '#FF69B4', '#8B008B', '#6B8E23', '#00BFFF'] #a bunch of color to display different labels
 
 def plot(array=[],number_of_labels=0,planes=[]):#a function to visualise 3D area. no number_of_label if there are no labels
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
-    if number_of_labels==0:
+    if number_of_labels==0:#if we want to take labels into account
         for point in array:
             ax.scatter(point[0], point[1], point[2])
-    else: 
+    else: #if labels are taken into account
         if number_of_labels > len(colors):
             for _ in range(len(colors),number_of_labels+1):
                 colors.append('#000000')
         for label_number in range(number_of_labels):
             for point in array[label_number]:
                 ax.scatter(point[0], point[1], point[2],c=colors[label_number])
-    for plane in planes:
+    for plane in planes:#if we want to display planes
         xlim = ax.get_xlim()
         ylim = ax.get_ylim()
         X,Y = np.meshgrid(np.arange(xlim[0], xlim[1]),
@@ -35,51 +36,77 @@ def plot(array=[],number_of_labels=0,planes=[]):#a function to visualise 3D area
     ax.set_zlabel('Z Label')
     plt.show()
 
-def cluster(data_numpy_array):
-    clustering = AgglomerativeClustering(n_clusters=None,linkage='single',distance_threshold=0.75).fit(data_numpy_array)#link points/agglomerations when the minimum distance between the points/aglomerations is inferior to distance_threshold with all the points in data_numpy_array
-    labels=[[label] for label in clustering.labels_]#putting label on the right format to concatenate
+def plot2D(array,catenary=True,x0=0,y0=0,c=1):#a function to visualise 2D data array.
+    for point in array:
+        plt.scatter(point[0], point[1],c=colors[0])
+    if catenary:
+        x = [-25+i/2 for i in range(100)]
+        y = [y0+c*cosh((xi-x0)/c)-c for xi in x]
+        plt.plot(x, y)
+    plt.show()
 
+def cluster(data_numpy_array):#clustering function to find wires by agglomeration
+    clustering = AgglomerativeClustering(n_clusters=None,linkage='single',distance_threshold=0.75).fit(data_numpy_array)#link points/agglomerations when the minimum distance between the points/aglomerations is inferior to distance_threshold with all the points in data_numpy_array
     #reorganizing datas into  [[points from wire 1],...,[points from wire n]]
     data_by_label=[[] for _ in range(clustering.n_clusters_)]
     for i in range(len(clustering.labels_)):
         data_by_label[clustering.labels_[i]].append(data_numpy_array[i])
     return data_by_label
 
-def findPlane(array): #find the nearest plane to an array of points
+def findPlane(array): #find the nearest plane to an array of points and the points from the wire projected in to this plane
     pca = PCA(n_components=2)
     pca.fit(array)
-    points=pca.inverse_transform(np.array([[0,0],[1,0],[0,1]]))
+    points=pca.inverse_transform(np.array([[0,0],[1,0],[0,1]]))#getting 3 points on the plane in 3D base
     v1=[points[1][i]-points[0][i] for i in range(3)]
     v2=[points[2][i]-points[0][i] for i in range(3)]
-    p=[v1[1]*v2[2]-v1[2]*v2[1],v1[2]*v2[0]-v1[0]*v2[2],v1[0]*v2[1]-v1[1]*v2[0]]
-    #print( solution )
+    p=[v1[1]*v2[2]-v1[2]*v2[1],v1[2]*v2[0]-v1[0]*v2[2],v1[0]*v2[1]-v1[1]*v2[0]]#finding a vector which is orthogonal to the plane
+
+    #calculating the solutions as ax + by + d = z
     a = p[0]/p[2]
     b = p[1]/p[2]
     d = (-p[0]*points[0][0] - p[1]*points[0][1] -  p[2]*points[0][2])/p[2]
-    print("%f x + %f y + %f = z" % (a, b, d))
-    return a ,b ,d
+    #print("%f x + %f y + %f = z" % (a, b, d))
+    wire_projection=pca.transform(array)
+    return a ,b ,d,wire_projection
 
-def distance_point_plane(point,plane):
+def distance_point_plane(point,plane):#gives the distance between a plane and a point
     return abs(plane[0]*point[0]+plane[1]*point[1]-point[2]+plane[2])/sqrt(pow(plane[0],2)+pow(plane[1],2)+1)
 
-def main():  
+def catenary_dist_function(x,point,x0,y0,c):#gives the distance between a plane and a point from catenary
+    return abs(sqrt(pow(point[0]-x,2)+ pow( point[1]-(y0+c*cosh((x-x0)/c)-c),2) ))
+
+def minimum_distance_point_catanary(point,x0,y0,c):#gives the minimum distance between a plane and a point from catenary
+    return fmin(catenary_dist_function, 0,args=(point,x0,y0,c),full_output=1,disp=0)
+
+def error_on_catenary(x,array,x0,y0):#return the global error of the catenary function
+    error=0
+    for point in array:
+        error+= minimum_distance_point_catanary(point,x0,y0,x)[1]
+    return error
+
+def main(): 
+     
     df = pd.read_parquet('../data/lidar_cable_points_easy.parquet') #extracting data into df
     data_numpy_array = df.to_numpy()#create a numpy array from data frame
-    #plot(data_numpy_array)
-    data_by_label = cluster(data_numpy_array)
+
+    data_by_label = cluster(data_numpy_array)#clustering
     #plot(data_by_label,len(data_by_label))
     print("there are "+str(len(data_by_label))+" wires detected by clustering") 
-    planes=[findPlane(array) for array in data_by_label]
-    # print(distance_point_plane(data_by_label[2][5],planes[0]))
-    # print(distance_point_plane(data_by_label[2][5],planes[1]))
-    # print(distance_point_plane(data_by_label[2][5],planes[2]))
-    # planes=[findPlane(data_by_label[0])]
-    # plot(data_by_label,len(data_by_label),planes)
-    # planes=[findPlane(data_by_label[1])]
-    # plot(data_by_label,len(data_by_label),planes)
-    # planes=[findPlane(data_by_label[2])]
-    # plot(data_by_label,len(data_by_label),planes)
 
+    planes=[findPlane(array) for array in data_by_label]#finding planes
+    bests_c=[]
+    t0=time.time()
+    for plane in planes:
+        x0=0
+        y0=-0.52
+        bests_c.append(fmin(error_on_catenary, 1,args=(plane[3],x0,y0),full_output=1,disp=0))
+    end=time.time()-t0
+
+    print("RESULTS : ")
+    print("time to find catenary functions : "+str(end))
+    for i in range(len(bests_c)):
+        print("The best catenary param for wire is : "+str(bests_c[i][0]))
+    plot2D(planes[0][3],True,0,-0.52,bests_c[0][0])
 
 if __name__ == '__main__' :
     main()
