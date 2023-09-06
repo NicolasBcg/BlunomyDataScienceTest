@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from math import *
-colors=['#808080', '#FF0000', '#FFFF00', '#00FF00', '#0000FF', '#FF00FF', '#C0C0C0', '#FFA500', '#191970', '#17becf', '#FF69B4', '#8B008B', '#6B8E23', '#00BFFF'] #a bunch of color to display different labels
+colors=['#808080', '#FF0000', '#FFFF00', '#00FF00', '#0000FF', '#FF00FF', '#C0C0C0', '#FFA500', '#191970', '#17becf', '#FF69B4', '#8B008B', '#6B8E23', '#00BFFF','#7e5835'] #a bunch of color to display different labels
 
 def plot(array=[],number_of_labels=0,planes=[]):#a function to visualise 3D area. no number_of_label if there are no labels
     fig = plt.figure()

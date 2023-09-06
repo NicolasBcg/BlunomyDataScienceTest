@@ -3,9 +3,11 @@ import numpy as np
 from sklearn.cluster import AgglomerativeClustering
 from math import *
 import time
+import os
 from catenarylib import findCatenary
 from planelib import *
 from plotlib import plot,plot2D
+
 
 def cluster(data_numpy_array):#clustering function to find wires by agglomeration return data grouped by wire detected
     clustering = AgglomerativeClustering(n_clusters=None,linkage='single',distance_threshold=0.75).fit(data_numpy_array)#link points/agglomerations when the minimum distance between the points/aglomerations is inferior to distance_threshold with all the points in data_numpy_array
@@ -16,29 +18,40 @@ def cluster(data_numpy_array):#clustering function to find wires by agglomeratio
     return data_by_wire
 
 def main(): 
-    df = pd.read_parquet('../data/lidar_cable_points_medium.parquet') #extracting data into df
+    print("Program Start : \n")
+    dir=__file__[0:len(__file__)-13]
+    files=os.listdir(dir+'/data')
+    for i in range(len(files)):
+        print('Type '+str(i)+' to load '+files[i] )
+    try:
+        df = pd.read_parquet(dir+'/data/'+files[int(input('Select the number of the file you want to load : '))]) #extracting data into df
+    except:
+        print('invalid entry')
+        exit(0)
+    t0=time.time()
     data_numpy_array = df.to_numpy()#create a numpy array from data frame
 
     data_by_wire = cluster(data_numpy_array)#clustering
     #plot(data_by_wire,len(data_by_wire))
-    print("there are "+str(len(data_by_wire))+" wires detected by clustering") 
+    #print("there are "+str(len(data_by_wire))+" wires detected by clustering") 
     data_by_wire=agglomerateWithPlane(data_by_wire)
-    print("there are "+str(len(data_by_wire))+" wires detected by planes") 
+    #print("there are "+str(len(data_by_wire))+" wires detected by planes") 
     #plot(data_by_wire,len(data_by_wire))
+    print("\nClustering done , "+str(len(data_by_wire))+" wires detected")
     planes=[findPlane(array) for array in data_by_wire]#finding planes
-    
     bests_c_x0_y0=[]
-    t0=time.time()
+    print("Determining best Catenary equations... Might take approximatively "+str(len(data_by_wire)*45)+" seconds")
     for plane in planes:
         bests_c_x0_y0.append(findCatenary(plane[3]))
     end=time.time()-t0
 
-    print("RESULTS : ")
-    print("Time to find catenary functions in 2D: "+str(end))
+    print("\nRESULTS : ")
+    print("There are "+str(len(data_by_wire))+" wires detected by planes")
+    print("Total execution time : "+str(end))
     print("For catenary equation, the equation becomes :")
     print("  y1*x + y2*y + y3*z = y0 + c * [cosh((x1*x + x2*y + x3*z - x0)/c)-1]")
     for i in range(len(bests_c_x0_y0)):
-        print("For wire "+str(i)+" :")
+        print("For wire "+str(i+1)+" :")
         print("  c = "+str(bests_c_x0_y0[i][0]))
         print("  x0 = "+str(bests_c_x0_y0[i][1]))
         print("  y0 = "+str(bests_c_x0_y0[i][2]))
@@ -50,3 +63,4 @@ def main():
 
 if __name__ == '__main__' :
     main()
+    
