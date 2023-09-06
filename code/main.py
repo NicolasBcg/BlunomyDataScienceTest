@@ -16,14 +16,17 @@ def cluster(data_numpy_array):#clustering function to find wires by agglomeratio
     return data_by_wire
 
 def main(): 
-    df = pd.read_parquet('../data/lidar_cable_points_easy.parquet') #extracting data into df
+    df = pd.read_parquet('../data/lidar_cable_points_medium.parquet') #extracting data into df
     data_numpy_array = df.to_numpy()#create a numpy array from data frame
 
     data_by_wire = cluster(data_numpy_array)#clustering
     #plot(data_by_wire,len(data_by_wire))
     print("there are "+str(len(data_by_wire))+" wires detected by clustering") 
-
+    data_by_wire=agglomerateWithPlane(data_by_wire)
+    print("there are "+str(len(data_by_wire))+" wires detected by planes") 
+    #plot(data_by_wire,len(data_by_wire))
     planes=[findPlane(array) for array in data_by_wire]#finding planes
+    
     bests_c_x0_y0=[]
     t0=time.time()
     for plane in planes:

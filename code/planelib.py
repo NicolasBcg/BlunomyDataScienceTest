@@ -18,3 +18,40 @@ def findPlane(array): #find the nearest plane to an array of points and the poin
     return a ,b ,d,wire_projection,pca
 def distance_point_plane(point,plane):#gives the distance between a plane and a point
     return abs(plane[0]*point[0]+plane[1]*point[1]-point[2]+plane[2])/sqrt(pow(plane[0],2)+pow(plane[1],2)+1)
+
+def sort(data_by_wire):
+    sizes=[len(batch) for batch in data_by_wire]
+    sizes.sort(reverse=True)
+    return sizes
+
+def mean_distance_batch_plane(batch,plane):#gives the distance between a plane and a point
+    mean=0
+    for point in batch:
+        mean+=distance_point_plane(point,plane)
+    return mean/len(batch)
+
+
+    
+
+def linkBatch(index,data_by_wire,linkage_threshold=0.3):#link batch based on the proximity of the points to the other's bach plane
+    plane=findPlane(data_by_wire[index])
+    #print(mean_distance_batch_plane(batch,plane))
+    for i in range(len(data_by_wire)):
+        if mean_distance_batch_plane(data_by_wire[i],plane)<linkage_threshold and i!=index:
+            for point in data_by_wire[i]:
+                data_by_wire[index].append(point)
+            data_by_wire.pop(i)
+            return data_by_wire,True
+    return [],False
+
+        
+
+def agglomerateWithPlane(data_by_wire):#make plane based agglomeration
+    sizes=sort(data_by_wire)
+    for size in sizes:
+        for i in range(len(data_by_wire)):
+            if len(data_by_wire[i])==size:
+                res=linkBatch(i,data_by_wire)
+                if res[1] == True:
+                    return agglomerateWithPlane(res[0])
+    return data_by_wire
