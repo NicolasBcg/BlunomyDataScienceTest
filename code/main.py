@@ -8,7 +8,7 @@ from plotlib import plot,plot2D
 
 
 def cluster(data_numpy_array):#clustering function to find wires by agglomeration return data grouped by wire detected
-    clustering = AgglomerativeClustering(n_clusters=None,linkage='single',distance_threshold=0.75).fit(data_numpy_array)#link points/agglomerations when the minimum distance between the points/aglomerations is inferior to distance_threshold with all the points in data_numpy_array
+    clustering = AgglomerativeClustering(n_clusters=None,linkage='single',distance_threshold=0.65).fit(data_numpy_array)#link points/agglomerations when the minimum distance between the points/aglomerations is inferior to distance_threshold with all the points in data_numpy_array
     #reorganizing datas into  [[points from wire 1],...,[points from wire n]]
     data_by_wire=[[] for _ in range(clustering.n_clusters_)]
     for i in range(len(clustering.labels_)):
@@ -33,13 +33,12 @@ def main():
     #plot(data_by_wire,len(data_by_wire))
     print("there are "+str(len(data_by_wire))+" wires detected by clustering") 
     #data_by_wire=agglomerateWithPlane(data_by_wire)
+    data_by_wire=agglomerateWithPlane(data_by_wire)
+    print("there are "+str(len(data_by_wire))+" wires detected by planes") 
     data_by_wire=agglomerateWithline(data_by_wire)
     print("there are "+str(len(data_by_wire))+" wires detected by lines") 
 
-    data_by_wire=agglomerateWithPlane(data_by_wire)
-    print("there are "+str(len(data_by_wire))+" wires detected by planes") 
-
-    #plot(data_by_wire,len(data_by_wire))
+    plot(data_by_wire,len(data_by_wire))
     print("\nClustering done , "+str(len(data_by_wire))+" wires detected")
 
     planes=[findPlane(array) for array in data_by_wire]#finding planes

@@ -72,7 +72,7 @@ def mean_distance_batch_line(batch,line):#gives the distance between a plane and
         mean+=distance_point_line(point,line)
     return mean/len(batch)
 
-def linkBatch_by_line(index,data_by_wire,linkage_threshold=0.25):#link batch based on the proximity of the points to the other's bach plane
+def linkBatch_by_line(index,data_by_wire,linkage_threshold=0.5):#link batch based on the proximity of the points to the other's bach plane
     line=findLine(data_by_wire[index])
     #print(line)
     for i in range(len(data_by_wire)):
@@ -86,7 +86,7 @@ def linkBatch_by_line(index,data_by_wire,linkage_threshold=0.25):#link batch bas
 def agglomerateWithline(data_by_wire):#make plane based agglomeration
     sizes=sort(data_by_wire)
     for size in sizes:
-        if size > 20:
+        if size > 25:
             for i in range(len(data_by_wire)):
                 if len(data_by_wire[i])==size:
                     res=linkBatch_by_line(i,data_by_wire)
