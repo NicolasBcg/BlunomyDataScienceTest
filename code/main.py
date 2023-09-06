@@ -31,11 +31,17 @@ def main():
 
     data_by_wire = cluster(data_numpy_array)#clustering
     #plot(data_by_wire,len(data_by_wire))
-    #print("there are "+str(len(data_by_wire))+" wires detected by clustering") 
+    print("there are "+str(len(data_by_wire))+" wires detected by clustering") 
+    #data_by_wire=agglomerateWithPlane(data_by_wire)
+    data_by_wire=agglomerateWithline(data_by_wire)
+    print("there are "+str(len(data_by_wire))+" wires detected by lines") 
+
     data_by_wire=agglomerateWithPlane(data_by_wire)
-    #print("there are "+str(len(data_by_wire))+" wires detected by planes") 
+    print("there are "+str(len(data_by_wire))+" wires detected by planes") 
+
     #plot(data_by_wire,len(data_by_wire))
     print("\nClustering done , "+str(len(data_by_wire))+" wires detected")
+
     planes=[findPlane(array) for array in data_by_wire]#finding planes
     bests_c_x0_y0=[]
     print("Determining best Catenary equations... Might take approximatively "+str(len(data_by_wire)*45)+" seconds")

@@ -1,4 +1,5 @@
 from sklearn.decomposition import PCA
+from sklearn import linear_model
 import numpy as np
 from math import *
 def findPlane(array): #find the nearest plane to an array of points and the points from the wire projected in to this plane
@@ -52,4 +53,43 @@ def agglomerateWithPlane(data_by_wire):#make plane based agglomeration
                     res=linkBatch(i,data_by_wire)
                     if res[1] == True:
                         return agglomerateWithPlane(res[0])
+    return data_by_wire
+
+
+# all the same as plane agglomeration but with line drawn on plane x,y
+def findLine(array):
+    points=[[point[0],point[1]]for point in array]
+    y=[point[1]for point in array]
+    reg = linear_model.LinearRegression()
+    reg.fit(points,y)
+    return reg.coef_
+def distance_point_line(point,line):#gives the distance between a plane and a point
+    return abs(line[0]*point[0]-point[1]+line[1])/sqrt(pow(line[0],2)+1)
+
+def mean_distance_batch_line(batch,line):#gives the distance between a plane and a point
+    mean=0
+    for point in batch:
+        mean+=distance_point_line(point,line)
+    return mean/len(batch)
+
+def linkBatch_by_line(index,data_by_wire,linkage_threshold=0.25):#link batch based on the proximity of the points to the other's bach plane
+    line=findLine(data_by_wire[index])
+    #print(line)
+    for i in range(len(data_by_wire)):
+        if mean_distance_batch_line(data_by_wire[i],line)<linkage_threshold and i!=index:
+            for point in data_by_wire[i]:
+                data_by_wire[index].append(point)
+            data_by_wire.pop(i)
+            return data_by_wire,True
+    return [],False
+
+def agglomerateWithline(data_by_wire):#make plane based agglomeration
+    sizes=sort(data_by_wire)
+    for size in sizes:
+        if size > 20:
+            for i in range(len(data_by_wire)):
+                if len(data_by_wire[i])==size:
+                    res=linkBatch_by_line(i,data_by_wire)
+                    if res[1] == True:
+                        return agglomerateWithline(res[0])
     return data_by_wire
