@@ -1,9 +1,7 @@
-import pandas as pd
-import numpy as np
-from sklearn.cluster import AgglomerativeClustering
-from math import *
-import time
 import os
+import time
+import pandas as pd
+from sklearn.cluster import AgglomerativeClustering
 from catenarylib import findCatenary
 from planelib import *
 from plotlib import plot,plot2D
