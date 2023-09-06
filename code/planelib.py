@@ -42,7 +42,6 @@ def linkBatch(index,data_by_wire,linkage_threshold=0.25):#link batch based on th
             return data_by_wire,True
     return [],False
 
-        
 
 def agglomerateWithPlane(data_by_wire):#make plane based agglomeration
     sizes=sort(data_by_wire)
